@@ -1,6 +1,6 @@
 package com.MySQL.demo.config;
 
-import com.MySQL.demo.service.UserDetailsServiceImpl;
+//import com.MySQL.demo.service.UserDetailsServiceImpl;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,17 +23,18 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-//                                .requestMatchers("/").permitAll()
-                                .requestMatchers("/login", "/register","/users" ,"/users/**").permitAll()
-                                .anyRequest().permitAll()
-                                //.anyRequest().authenticated()
-//                                .requestMatchers("/users/**").authenticated() // Ensure /users is protected
-                );
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .authorizeHttpRequests(authorizeRequests ->
+//                        authorizeRequests
+////                                .requestMatchers("/").permitAll()
+//                                .requestMatchers("/login", "/register","/users" ,"/users/**").permitAll()
+//                                .anyRequest().permitAll()
+//
+//                                //.anyRequest().authenticated()
+////                                .requestMatchers("/users/**").authenticated() // Ensure /users is protected
+//                )
 //                .formLogin(formLogin ->
 //                        formLogin
 //                                .loginPage("/login")
@@ -46,9 +47,22 @@ public class SecurityConfig {
 //                                .logoutSuccessUrl("/login?logout") // Redirect to login page after logout
 //                                .permitAll()
 //                );
+//
+//        return http.build();
+//    }
 
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable()) // Disable CSRF protection
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers("/login", "/register", "/users", "/users/**").permitAll()
+                                .anyRequest().authenticated() // Ensure other requests are authenticated
+                );
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

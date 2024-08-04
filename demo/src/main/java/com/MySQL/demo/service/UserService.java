@@ -26,7 +26,8 @@ public class UserService {
 //    @Autowired
 //    private PasswordEncoder passwordEncoder;
 //    @Autowired
-//    private BCryptPasswordEncoder bCryptPasswordEncoder; //! Implemented BCryptPasswordEncoder instead of PasswordEncoder
+//    private BCryptPasswordEncoder bCryptPasswordEncoder;
+// ! Implemented BCryptPasswordEncoder instead of PasswordEncoder
 
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -77,7 +78,8 @@ public class UserService {
                 existingUser.setPhoneNumber(userUpdates.getPhoneNumber());
             }
             if (userUpdates.getPasswordHash() != null) {
-                existingUser.setPasswordHash(userUpdates.getPasswordHash());
+                existingUser.setPasswordHash(bCryptPasswordEncoder.encode(userUpdates.getPasswordHash()));
+                //existingUser.setPasswordHash(userUpdates.getPasswordHash());
             }
 
             try {
