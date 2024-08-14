@@ -1,4 +1,4 @@
-package com.MySQL.demo.entity;
+package com.test_system.demo.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -43,5 +46,11 @@ public class User {
 //    @Lob
 //    @Column(name = "profileImage")
 //    private byte[] profileImage; // Store the image as binary data
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
 
 }

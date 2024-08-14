@@ -1,16 +1,17 @@
-package com.MySQL.demo.controller;
+package com.test_system.demo.controller;
 
 import org.springframework.security.core.Authentication;
-//import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller
+//@Controller
 public class LoginController {
 
     @GetMapping("/login")
+    //? Compare password and bcrypt, explore spring jwt token
     public String login() {
         return "login"; // Return the login view
     }
@@ -31,3 +32,6 @@ public class LoginController {
         return "redirect:/login?logout"; // Redirect to login page after logout
     }
 }
+
+
+//? Theory about Hybernate with spring security

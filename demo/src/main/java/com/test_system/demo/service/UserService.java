@@ -1,38 +1,30 @@
-package com.MySQL.demo.service;
+package com.test_system.demo.service;
 
-import com.MySQL.demo.entity.User;
-import com.MySQL.demo.exception.CustomException;
-import com.MySQL.demo.repository.UserRepository;
+import com.test_system.demo.entity.Role;
+import com.test_system.demo.entity.User;
+import com.test_system.demo.exception.CustomException;
+import com.test_system.demo.repository.RoleRepository;
+import com.test_system.demo.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-//import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService {
 
-//    @Autowired
-//    private UserRepository userRepository;
-
-//    @Autowired
-//    private PasswordEncoder passwordEncoder;
-//    @Autowired
-//    private BCryptPasswordEncoder bCryptPasswordEncoder;
-// ! Implemented BCryptPasswordEncoder instead of PasswordEncoder
-
-
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final UserRepository userRepository;
-
 
     public UserService(BCryptPasswordEncoder bCryptPasswordEncoder, UserRepository userRepository) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -49,13 +41,63 @@ public class UserService {
         }
     }
 
+    public User saveUser(User user, Set<Long> roleIds) {
+        try {
+            user.setPasswordHash(bCryptPasswordEncoder.encode(user.getPasswordHash()));
+
+            // Fetch roles from the RoleRepository
+            Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
+            user.setRoles(roles);
+
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException("A user with this email or username already exists.");
+
+        } catch (ConstraintViolationException e) {
+            throw new CustomException("Validation failed: " + e.getMessage());
+
+        } catch (Exception e) {
+            throw new CustomException("An error occurred while saving the user.");
+        }
+
+    }
+
+    @Autowired
+    private RoleRepository roleRepository; // Add a RoleRepository to interact with the Role entity
+
+    public User assignRolesToUser(int userId, Set<Long> roleIds) {
+        Optional<User> existingUserOptional = userRepository.findById(userId);
+        if (existingUserOptional.isPresent()) {
+            User existingUser = existingUserOptional.get();
+
+            // Fetch roles from the RoleRepository
+            Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
+            existingUser.setRoles(roles);
+
+            return userRepository.save(existingUser);
+        } else {
+            throw new CustomException("User not found.");
+        }
+    }
+
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    @Transactional
     public User getUserById(int id) {
         return userRepository.findById(id).orElse(null);
+//        user.getrole()
+    }
+    //!Have to implement role based access
+//    @Transactional
+//    public User getUserById(int id) {
+//        return userRepository.findByIdWithRoles(id).orElse(null);
+//    }
 
+    @Transactional
+    public List<User> getAllUsersWithRoles() {
+        return userRepository.findAllWithRoles();
     }
 
     public User patchUser(int id, User userUpdates) {
@@ -92,6 +134,15 @@ public class UserService {
         }
     }
 
+    public Page<User> getUsersPagedAndSearched(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page - 1, size); // Adjust if needed
+        return userRepository.findBySearch(search, pageable);
+    }
+
+    public void deleteUser(int id) {
+        userRepository.deleteById(id);
+    }
+
 //    public User updateProfileImage(int id, MultipartFile file) throws IOException {
 //        Optional<User> existingUserOptional = userRepository.findById(id);
 //        if (existingUserOptional.isPresent()) {
@@ -111,10 +162,4 @@ public class UserService {
 //            throw new CustomException("User not found.");
 //        }
 //    }
-
-    public Page<User> getUsersPagedAndSearched(int page, int size, String search) {
-        Pageable pageable = PageRequest.of(page - 1, size); // Adjust if needed
-        return userRepository.findBySearch(search, pageable);
-    }
-
 }

@@ -1,4 +1,4 @@
-package com.MySQL.demo.dto;
+package com.test_system.demo.dto;
 
 import lombok.Data;
 

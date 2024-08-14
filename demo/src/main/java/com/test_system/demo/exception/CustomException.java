@@ -1,4 +1,4 @@
-package com.MySQL.demo.exception;
+package com.test_system.demo.exception;
 
 public class CustomException extends RuntimeException
 {
