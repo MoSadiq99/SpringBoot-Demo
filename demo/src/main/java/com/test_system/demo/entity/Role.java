@@ -16,7 +16,11 @@ public class Role {
     private Long roleId;
     private String name;
 
-//    @ManyToMany(mappedBy = "roles")
+    public Long getId() {
+        return roleId;
+    }
+
+    //    @ManyToMany(mappedBy = "roles")
 //    @JsonIgnore // Annotation to avoid infinite recursion
 //    private Set<User> users = new HashSet<>();
 

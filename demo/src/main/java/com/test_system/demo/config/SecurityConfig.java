@@ -17,18 +17,20 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .authorizeHttpRequests(authorizeRequests ->
-//                        authorizeRequests
-////                                .requestMatchers("/").permitAll()
-//                                .requestMatchers("/login", "/register","/users" ,"/users/**").permitAll()
-//                                .anyRequest().permitAll()
-//
-//                                //.anyRequest().authenticated()
-////                                .requestMatchers("/users/**").authenticated() // Ensure /users is protected
-//                )
+    @Bean  // Bean for password encoder optional
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(@org.jetbrains.annotations.NotNull HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable()) // Disable CSRF protection
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers("/login", "/register", "/users", "/users/**", "/users/1/profile-image").permitAll()
+                                .anyRequest().authenticated() // Ensure other requests are authenticated
+                );
 //                .formLogin(formLogin ->
 //                        formLogin
 //                                .loginPage("/login")
@@ -41,36 +43,6 @@ public class SecurityConfig {
 //                                .logoutSuccessUrl("/login?logout") // Redirect to login page after logout
 //                                .permitAll()
 //                );
-//
-//        return http.build();
-//    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(@org.jetbrains.annotations.NotNull HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF protection
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers("/login", "/register", "/users", "/users/**").permitAll()
-                                .anyRequest().authenticated() // Ensure other requests are authenticated
-                ).formLogin(formLogin ->
-                        formLogin
-                                .loginPage("/login")
-                                .defaultSuccessUrl("/home", true) // Redirect to /home after successful login
-                                .permitAll()
-                )
-                .logout(logout ->
-                        logout
-                                .logoutUrl("/logout")
-                                .logoutSuccessUrl("/login?logout") // Redirect to login page after logout
-                                .permitAll()
-                );
         return http.build();
-    }
-
-
-    @Bean  // Bean for password encoder optional
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

@@ -1,20 +1,34 @@
 package com.test_system.demo.controller;
 
+import com.test_system.demo.dto.LoginRequest;
 import com.test_system.demo.dto.UserRequest;
 import com.test_system.demo.entity.User;
 import com.test_system.demo.exception.CustomException;
 import com.test_system.demo.service.UserService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
 @RestController
 @CrossOrigin
 public class UserController {
+    @Value("${upload.path}") // Folder to store uploaded user profile images
+    private String uploadPath;
+
     private final UserService userService;
 
     @Autowired
@@ -31,7 +45,7 @@ public class UserController {
 
     //* Creates a new user with the provided user data and role IDs.
     @PostMapping("/users/roles")
-    public String postUser(@RequestBody UserRequest userRequest) {
+    public String postUser(@RequestBody @NotNull UserRequest userRequest) {
         userService.saveUser(userRequest.getUser(), userRequest.getRoleIds());
         return "User added successfully";
     }
@@ -45,13 +59,6 @@ public class UserController {
         } catch (CustomException e) {
             return ResponseEntity.badRequest().body(null); // Or handle the error response differently
         }
-    }
-
-    //* Deletes a user with the provided user ID.
-    @DeleteMapping("/users/{id}")
-    public String deleteUser(@PathVariable int id) {
-        userService.deleteUser(id);
-        return "User deleted successfully";
     }
 
     //* Gets a list of users with pagination and search options.
@@ -91,27 +98,76 @@ public class UserController {
             return ResponseEntity.badRequest().body(null); // Or handle the error response differently
         }
     }
-//    @PatchMapping("/users/{id}/profile-image")
-//    public ResponseEntity<String> uploadImage(@PathVariable int id, @RequestParam("file") MultipartFile file) {
-//        try {
-//            userService.updateProfileImage(id, file);
-//            return ResponseEntity.ok("Image uploaded successfully.");
-//        } catch (IOException e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image: " + e.getMessage());
-//        } catch (CustomException e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
 
-//    @GetMapping("/users/{id}/profile-image")
-//    public ResponseEntity<byte[]> getProfileImage(@PathVariable int id) {
-//        try {
-//            byte[] image = userService.getProfileImage(id);
-//            return ResponseEntity.ok()
-//                    .contentType(MediaType.IMAGE_JPEG) // Change to the correct media type based on your image format
-//                    .body(image);
-//        } catch (CustomException e) {
-//            return ResponseEntity.badRequest().body(null);
-//        }
-//    }
+    //* Deletes a user with the provided user ID.
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable int id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok("User deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete user");
+        }
+    }
+
+    //* Logs in a user with the provided username and password.
+    @PostMapping("/login")
+    public String login(@RequestBody @NotNull LoginRequest userLogin) {
+        return userService.login(userLogin.getUsername(), userLogin.getPassword());
+    }
+
+    //! Testing
+    @PostMapping("/login/params")
+    public String login(@RequestParam("username") String username, @RequestParam("password") String password) {
+        return userService.login(username, password);
+    }
+
+    //* Uploads a profile image for a user with the provided user ID.
+    @PostMapping("/users/{id}/profile-image")
+    public ResponseEntity<String> uploadProfileImage(@PathVariable int id, @RequestParam("file") @NotNull MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("No file uploaded");
+            }
+
+            // Ensure the upload directory exists
+            File directory = new File(uploadPath);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            // Save the file to the server
+            String fileName = file.getOriginalFilename();
+            Path filePath = Paths.get(uploadPath, fileName);
+            Files.copy(file.getInputStream(), filePath);
+
+            // Save the file path in the database
+            String filePathString = filePath.toString();
+            userService.updateUserProfileImage(id, filePathString);
+
+            return ResponseEntity.ok("File uploaded successfully");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
+        }
+    }
+
+    //* Gets the profile image for a user with the provided user ID.
+    @GetMapping("/users/{id}/profile-image")
+    public ResponseEntity<byte[]> getProfileImage(@PathVariable int id) {
+        try {
+            String imagePath = userService.getProfileImagePath(id);
+            File imageFile = new File(imagePath);
+
+            if (!imageFile.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            byte[] image = Files.readAllBytes(imageFile.toPath());
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(image);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }

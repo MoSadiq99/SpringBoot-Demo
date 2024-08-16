@@ -43,14 +43,16 @@ public class User {
     @NotBlank(message = "Password is required")
     private String passwordHash; // Required, encrypt the password
 
+    @Column(name = "profileImage")
+    private String profileImage; // Store the path to the profile image
+
 //    @Lob
 //    @Column(name = "profileImage")
 //    private byte[] profileImage; // Store the image as binary data
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
-
 }

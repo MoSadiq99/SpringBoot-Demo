@@ -10,7 +10,7 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: update
-      dialect: org.hibernate.dialect.MySQL8Dialect
+      dialect: org.hibernate.dialect.MySQLDialect
 #  main:
 #    allow-circular-references: true
   logging:
@@ -19,5 +19,5 @@ spring:
         springframework:
           security: DEBUG
 
-
-
+upload:
+  path: demo\src\main\resources\uploads

@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<String> handleCustomException(CustomException ex)
     {
-        ex.printStackTrace();
+//        ex.printStackTrace();
         // Return a user-friendly message with a proper HTTP status
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
